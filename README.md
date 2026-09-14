@@ -74,13 +74,27 @@ Tag a test `@auth` in its title whenever it should start already logged in as ad
 
 ## CI
 
-`.github/workflows/playwright.yml` runs the suite on every push and pull request to `main`/`master`
-and uploads the HTML report as an artifact (30-day retention). Note that CI currently has no local
-backend services, so it is useful mainly as a lint/compile gate until the Supabase stack is
-provisioned in the workflow.
+`.github/workflows/playwright.yml` runs on every push and pull request to `main`/`master`.
+
+CI does **not** execute the tests — it runs `npx playwright test --list`, which compiles every
+spec, fixture and page object and verifies project/tag routing without launching a browser or
+needing a backend. It catches type errors, broken imports, renamed page objects and misrouted
+`@auth` tags; it cannot catch a stale selector or a wrong assertion.
+
+Running the suite for real in CI would require provisioning the Supabase stack and admin app in
+the workflow, plus making the dashboard assertions independent of seeded counts (see below).
 
 ## Adding a test
 
 1. Put selectors and interactions in a page object under `pages/` — keep `expect` out of it.
 2. Add or reuse a fixture in `tests/` so the test starts on the right page.
 3. Write the spec in `tests/ui/` or `tests/api/`, tagging it `@auth` if it needs an admin session.
+
+## Known limitation: the suite is not re-runnable
+
+Some dashboard tests assert exact global counts (`Approved 43`, `Pending Review 141`) and others
+delete users permanently. A second run against the same database will fail, because the first run
+changed the state those assertions depend on. Reseed the database between full runs.
+
+Making the suite repeatable means reading a value before the action and asserting a relative
+change afterwards — the pattern already used by the ticket tests in `tests/ui/dashboard.spec.ts`.

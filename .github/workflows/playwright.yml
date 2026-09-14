@@ -1,4 +1,4 @@
-name: Playwright Tests
+name: Playwright Compile Check
 on:
   push:
     branches: [ main, master ]
@@ -6,7 +6,7 @@ on:
     branches: [ main, master ]
 jobs:
   test:
-    timeout-minutes: 60
+    timeout-minutes: 10
     runs-on: ubuntu-latest
     steps:
     - uses: actions/checkout@v4
@@ -15,13 +15,9 @@ jobs:
         node-version: lts/*
     - name: Install dependencies
       run: npm ci
-    - name: Install Playwright Browsers
-      run: npx playwright install --with-deps
-    - name: Run Playwright tests
-      run: npx playwright test
-    - uses: actions/upload-artifact@v4
-      if: ${{ !cancelled() }}
-      with:
-        name: playwright-report
-        path: playwright-report/
-        retention-days: 30
+    # The suite targets a local Supabase stack and admin app that CI does not
+    # provision, so tests are not executed here. --list compiles every spec,
+    # fixture and page object and verifies project/tag routing without running
+    # anything or needing a backend.
+    - name: Compile and list tests
+      run: npx playwright test --list
