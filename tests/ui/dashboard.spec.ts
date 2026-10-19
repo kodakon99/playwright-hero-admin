@@ -8,7 +8,7 @@ test('@auth change waitlist status from pending to approved', async ({ dashboard
     await dashboardHero.filter_name('Test User 003');
     await dashboardHero.selectUser('Test User 003');
     await dashboardHero.status_change('Approved');
-    await expect(page.locator('#tableBody').getByText('Approved')).toBeVisible();
+    await expect(page.getByRole('row', { name: 'Test User 003' }).getByText('Approved')).toBeVisible();
     await expect(page.getByText('Approved 43')).toBeVisible();
     await expect(page.getByText('Pending Review 141')).toBeVisible();
 })
@@ -17,7 +17,7 @@ test('@auth change waitlist status from approved to pending', async ({ dashboard
     await dashboardHero.filter_name('Test User 003');
     await dashboardHero.selectUser('Test User 003');
     await dashboardHero.status_change('Pending Review');
-    await expect(page.locator('#tableBody').getByText('Pending Review')).toBeVisible();
+    await expect(page.getByRole('row', { name: 'Test User 003' }).getByText('Pending Review')).toBeVisible();
     await expect(page.getByText('Approved 42')).toBeVisible();
     await expect(page.getByText('Pending Review 142')).toBeVisible();
 })
