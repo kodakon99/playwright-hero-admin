@@ -50,10 +50,19 @@ export default defineConfig({
       dependencies: ['setup'],
       grep: /@auth/,
       testDir: './tests/ui',
+      testIgnore: /delete\.spec\.ts/,
     },
     {
       name: 'api',
       testDir: './tests/api'
+    },
+    {
+      // Deletes are permanent; run them after everything that asserts seeded counts.
+      name: 'chromium-destructive',
+      use: { ...devices['Desktop Chrome'], storageState: 'playwright/.auth/admin.json'},
+      dependencies: ['setup', 'chromium', 'chromium-with-auth', 'api'],
+      testDir: './tests/ui',
+      testMatch: /delete\.spec\.ts/,
     }
 
     // {

@@ -24,6 +24,7 @@ tests/
   fixturesHeroDashboard.ts     Fixture exposing a ready HeroDashboardPage
   ui/login.spec.ts             Login / magic-link UI tests
   ui/dashboard.spec.ts         Dashboard UI tests (all @auth)
+  ui/delete.spec.ts            Permanent user deletes (run last, see below)
   api/admin-authorization.spec.ts  200 / 401 / 403 checks on admin-users
 playwright.config.ts           Projects, reporters, auth wiring
 .github/workflows/playwright.yml  CI pipeline
@@ -76,13 +77,22 @@ Tag a test `@auth` in its title whenever it should start already logged in as ad
 
 `.github/workflows/playwright.yml` runs on every push and pull request to `main`/`master`.
 
-CI does **not** execute the tests — it runs `npx playwright test --list`, which compiles every
-spec, fixture and page object and verifies project/tag routing without launching a browser or
-needing a backend. It catches type errors, broken imports, renamed page objects and misrouted
-`@auth` tags; it cannot catch a stale selector or a wrong assertion.
+Each run provisions the backend from scratch, then runs the full suite:
 
-Running the suite for real in CI would require provisioning the Supabase stack and admin app in
-the workflow, plus making the dashboard assertions independent of seeded counts (see below).
+1. Checks out `Get-Hero-Now/getheronow-landing-page` into `hero-backend/` using the
+   `HERO_REPO_TOKEN` secret (a read-only PAT with access to that repo).
+2. `supabase start` applies the migrations and `seed.sql` and serves the edge functions
+   (`ADMIN_EMAIL=admin@example.invalid`). Mailpit comes up on `54324`.
+3. `scripts/build-test-site.py` builds `.test-site/`, which is served on `localhost:8888`.
+4. Runs `npx playwright test` and uploads the HTML report as an artifact.
+
+Because the database is seeded fresh on every run, leftovers from earlier runs cannot affect CI.
+
+## Test ordering
+
+The delete tests live in `tests/ui/delete.spec.ts` and run in their own project,
+`chromium-destructive`. It depends on every other project, so it runs only after all the tests
+that assert the seeded count of 205 users.
 
 ## Adding a test
 
